@@ -1,7 +1,7 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path, reverse_lazy
 
-from users.views import register_view, verify_email
+from users.views import UserListView, register_view, set_user_block, verify_email
 
 
 app_name = "users"
@@ -17,6 +17,12 @@ urlpatterns = [
     ),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("register/", register_view, name="register"),
+    path("", UserListView.as_view(), name="user_list"),
+    path(
+        "<int:pk>/<str:action>/",
+        set_user_block,
+        name="set_user_block",
+    ),
     path(
         "verify-email/<uidb64>/<token>/",
         verify_email,

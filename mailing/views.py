@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
@@ -43,6 +44,7 @@ def home_view(request):
             start_time__lte=current_time,
             end_time__gte=current_time,
             status=Mailing.STATUS_STARTED,
+            is_active=True,
         ).count(),
         "unique_recipients": Recipient.objects.filter(owner=request.user).count(),
         "successful_attempts": successful_attempts,
@@ -58,7 +60,10 @@ class RecipientListView(LoginRequiredMixin, ListView):
     context_object_name = "recipients"
 
     def get_queryset(self):
-        return super().get_queryset().filter(owner=self.request.user)
+        queryset = super().get_queryset()
+        if self.request.user.has_perm("mailing.can_view_all_recipients"):
+            return queryset
+        return queryset.filter(owner=self.request.user)
 
 
 class RecipientCreateView(LoginRequiredMixin, CreateView):
@@ -82,7 +87,10 @@ class RecipientDetailView(LoginRequiredMixin, DetailView):
             return self.handle_no_permission()
 
         recipient = self.get_object()
-        if recipient.owner != request.user:
+        if (
+            recipient.owner != request.user
+            and not request.user.has_perm("mailing.can_view_all_recipients")
+        ):
             raise PermissionDenied
 
         return super().dispatch(request, *args, **kwargs)
@@ -165,7 +173,10 @@ class MailingListView(LoginRequiredMixin, ListView):
     context_object_name = "mailings"
 
     def get_queryset(self):
-        return super().get_queryset().filter(owner=self.request.user)
+        queryset = super().get_queryset()
+        if self.request.user.has_perm("mailing.can_view_all_mailings"):
+            return queryset
+        return queryset.filter(owner=self.request.user)
 
 
 class MailingCreateView(LoginRequiredMixin, CreateView):
@@ -194,7 +205,10 @@ class MailingDetailView(LoginRequiredMixin, DetailView):
             return self.handle_no_permission()
 
         mailing = super().get_object()
-        if mailing.owner != request.user:
+        if (
+            mailing.owner != request.user
+            and not request.user.has_perm("mailing.can_view_all_mailings")
+        ):
             raise PermissionDenied
 
         return super().dispatch(request, *args, **kwargs)
@@ -255,6 +269,10 @@ def send_mailing_view(request, pk):
         owner=request.user,
     )
     current_time = timezone.now()
+
+    if not mailing.is_active:
+        messages.error(request, "Рассылка отключена менеджером.")
+        return redirect("mailing:mailing_detail", pk=mailing.pk)
 
     if not mailing.start_time <= current_time <= mailing.end_time:
         messages.error(
@@ -320,4 +338,23 @@ def send_mailing_view(request, pk):
             f"неуспешно: {failed_attempts}."
         ),
     )
+    return redirect("mailing:mailing_detail", pk=mailing.pk)
+
+
+@login_required
+@permission_required(
+    ("mailing.can_disable_mailing", "mailing.can_view_all_mailings"),
+    raise_exception=True,
+)
+@require_POST
+def disable_mailing_view(request, pk):
+    mailing = get_object_or_404(Mailing, pk=pk)
+
+    if mailing.is_active:
+        mailing.is_active = False
+        mailing.save(update_fields=["is_active"])
+        messages.success(request, "Рассылка отключена.")
+    else:
+        messages.info(request, "Рассылка уже отключена.")
+
     return redirect("mailing:mailing_detail", pk=mailing.pk)

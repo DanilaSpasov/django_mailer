@@ -7,27 +7,42 @@
     <div class="card-header d-flex justify-content-between align-items-center">
         <h1 class="h4 mb-0">Рассылка №{{ mailing.pk }}</h1>
         <div class="d-flex gap-2">
-            <form
-                method="post"
-                action="{% url 'mailing:mailing_send' mailing.pk %}"
-            >
-                {% csrf_token %}
-                <button class="btn btn-sm btn-success" type="submit">
-                    Запустить рассылку
-                </button>
-            </form>
-            <a
-                class="btn btn-sm btn-outline-secondary"
-                href="{% url 'mailing:mailing_update' mailing.pk %}"
-            >
-                Изменить
-            </a>
-            <a
-                class="btn btn-sm btn-outline-danger"
-                href="{% url 'mailing:mailing_delete' mailing.pk %}"
-            >
-                Удалить
-            </a>
+            {% if mailing.owner == user %}
+                {% if mailing.is_active %}
+                    <form
+                        method="post"
+                        action="{% url 'mailing:mailing_send' mailing.pk %}"
+                    >
+                        {% csrf_token %}
+                        <button class="btn btn-sm btn-success" type="submit">
+                            Запустить рассылку
+                        </button>
+                    </form>
+                {% endif %}
+                <a
+                    class="btn btn-sm btn-outline-secondary"
+                    href="{% url 'mailing:mailing_update' mailing.pk %}"
+                >
+                    Изменить
+                </a>
+                <a
+                    class="btn btn-sm btn-outline-danger"
+                    href="{% url 'mailing:mailing_delete' mailing.pk %}"
+                >
+                    Удалить
+                </a>
+            {% endif %}
+            {% if perms.mailing.can_disable_mailing and mailing.is_active %}
+                <form
+                    method="post"
+                    action="{% url 'mailing:mailing_disable' mailing.pk %}"
+                >
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-warning" type="submit">
+                        Отключить
+                    </button>
+                </form>
+            {% endif %}
         </div>
     </div>
 
@@ -35,6 +50,16 @@
         <dl class="row">
             <dt class="col-sm-3">Статус</dt>
             <dd class="col-sm-9">{{ mailing.status }}</dd>
+
+            <dt class="col-sm-3">Активность</dt>
+            <dd class="col-sm-9">
+                {% if mailing.is_active %}Активна{% else %}Отключена менеджером{% endif %}
+            </dd>
+
+            {% if perms.mailing.can_view_all_mailings %}
+                <dt class="col-sm-3">Владелец</dt>
+                <dd class="col-sm-9">{{ mailing.owner.email }}</dd>
+            {% endif %}
 
             <dt class="col-sm-3">Начало</dt>
             <dd class="col-sm-9">{{ mailing.start_time|date:"d.m.Y H:i" }}</dd>

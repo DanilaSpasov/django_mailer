@@ -12,6 +12,8 @@ class UserAdmin(admin.ModelAdmin):
         "last_name",
         "is_staff",
         "is_active",
+        "is_email_verified",
+        "is_blocked",
     )
-    list_filter = ("is_staff", "is_active")
+    list_filter = ("is_staff", "is_active", "is_email_verified", "is_blocked")
     search_fields = ("email", "first_name", "last_name")
