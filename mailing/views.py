@@ -148,6 +148,9 @@ class MessageListView(LoginRequiredMixin, ListView):
     template_name = "mailing/message_list.html"
     context_object_name = "message_list"
 
+    def get_queryset(self):
+        return super().get_queryset().filter(owner=self.request.user)
+
 
 class MessageCreateView(LoginRequiredMixin, CreateView):
     model = Message
@@ -155,17 +158,41 @@ class MessageCreateView(LoginRequiredMixin, CreateView):
     template_name = "mailing/message_form.html"
     success_url = reverse_lazy("mailing:message_list")
 
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
+
 
 class MessageDetailView(LoginRequiredMixin, DetailView):
     model = Message
     template_name = "mailing/message_detail.html"
     context_object_name = "message"
 
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+
+        message = self.get_object()
+        if message.owner != request.user:
+            raise PermissionDenied
+
+        return super().dispatch(request, *args, **kwargs)
+
 
 class MessageUpdateView(LoginRequiredMixin, UpdateView):
     model = Message
     form_class = MessageForm
     template_name = "mailing/message_form.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+
+        message = self.get_object()
+        if message.owner != request.user:
+            raise PermissionDenied
+
+        return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
         return reverse("mailing:message_detail", kwargs={"pk": self.object.pk})
@@ -176,6 +203,16 @@ class MessageDeleteView(LoginRequiredMixin, DeleteView):
     template_name = "mailing/message_confirm_delete.html"
     context_object_name = "message"
     success_url = reverse_lazy("mailing:message_list")
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+
+        message = self.get_object()
+        if message.owner != request.user:
+            raise PermissionDenied
+
+        return super().dispatch(request, *args, **kwargs)
 
 
 class MailingListView(LoginRequiredMixin, ListView):
