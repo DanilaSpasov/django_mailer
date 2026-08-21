@@ -24,6 +24,9 @@
             <a class="nav-link" href="{% url 'mailing:message_list' %}">
                 Сообщения
             </a>
+            <a class="nav-link" href="{% url 'mailing:mailing_list' %}">
+                Рассылки
+            </a>
         </div>
 
         {% if user.is_authenticated %}
