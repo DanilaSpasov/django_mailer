@@ -265,6 +265,7 @@ def send_mailing_view(request, pk):
 
     successful_attempts = 0
     failed_attempts = 0
+    attempts = []
 
     for recipient in mailing.recipients.all():
         try:
@@ -276,27 +277,36 @@ def send_mailing_view(request, pk):
             )
 
             if sent_count:
-                MailingAttempt.objects.create(
-                    mailing=mailing,
-                    status=MailingAttempt.STATUS_SUCCESS,
-                    server_response=f"Письмо отправлено: {recipient.email}",
+                attempts.append(
+                    MailingAttempt(
+                        mailing=mailing,
+                        status=MailingAttempt.STATUS_SUCCESS,
+                        server_response=f"Письмо отправлено: {recipient.email}",
+                    )
                 )
                 successful_attempts += 1
             else:
-                MailingAttempt.objects.create(
-                    mailing=mailing,
-                    status=MailingAttempt.STATUS_FAILED,
-                    server_response=f"Письмо не отправлено: {recipient.email}",
+                attempts.append(
+                    MailingAttempt(
+                        mailing=mailing,
+                        status=MailingAttempt.STATUS_FAILED,
+                        server_response=f"Письмо не отправлено: {recipient.email}",
+                    )
                 )
                 failed_attempts += 1
 
         except Exception as error:
-            MailingAttempt.objects.create(
-                mailing=mailing,
-                status=MailingAttempt.STATUS_FAILED,
-                server_response=f"{recipient.email}: {error}",
+            attempts.append(
+                MailingAttempt(
+                    mailing=mailing,
+                    status=MailingAttempt.STATUS_FAILED,
+                    server_response=f"{recipient.email}: {error}",
+                )
             )
             failed_attempts += 1
+
+    if attempts:
+        MailingAttempt.objects.bulk_create(attempts)
 
     add_message = (
         messages.warning
