@@ -16,6 +16,7 @@ from mailing.views import (
     RecipientDetailView,
     RecipientListView,
     RecipientUpdateView,
+    home_view,
     send_mailing_view,
 )
 
@@ -23,6 +24,7 @@ from mailing.views import (
 app_name = "mailing"
 
 urlpatterns = [
+    path("", home_view, name="home"),
     path("recipients/", RecipientListView.as_view(), name="recipient_list"),
     path(
         "recipients/create/",

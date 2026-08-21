@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -17,6 +17,39 @@ from django.views.generic import (
 
 from mailing.forms import MailingForm, MessageForm, RecipientForm
 from mailing.models import Mailing, MailingAttempt, Message, Recipient
+
+
+@login_required
+def home_view(request):
+    current_time = timezone.now()
+    user_mailings = Mailing.objects.filter(owner=request.user)
+
+    for mailing in user_mailings:
+        mailing.update_status()
+
+    user_attempts = MailingAttempt.objects.filter(
+        mailing__owner=request.user,
+    )
+    successful_attempts = user_attempts.filter(
+        status=MailingAttempt.STATUS_SUCCESS,
+    ).count()
+    failed_attempts = user_attempts.filter(
+        status=MailingAttempt.STATUS_FAILED,
+    ).count()
+
+    context = {
+        "total_mailings": user_mailings.count(),
+        "active_mailings": user_mailings.filter(
+            start_time__lte=current_time,
+            end_time__gte=current_time,
+            status=Mailing.STATUS_STARTED,
+        ).count(),
+        "unique_recipients": Recipient.objects.filter(owner=request.user).count(),
+        "successful_attempts": successful_attempts,
+        "failed_attempts": failed_attempts,
+        "sent_messages": successful_attempts,
+    }
+    return render(request, "mailing/home.html", context)
 
 
 class RecipientListView(LoginRequiredMixin, ListView):
