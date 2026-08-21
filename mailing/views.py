@@ -1,12 +1,15 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.decorators import permission_required
+from django.core.cache import cache
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from django.views.decorators.cache import cache_control
 from django.views.decorators.http import require_POST
 from django.views.generic import (
     CreateView,
@@ -21,36 +24,45 @@ from mailing.models import Mailing, MailingAttempt, Message, Recipient
 
 
 @login_required
+@cache_control(private=True, max_age=60)
 def home_view(request):
-    current_time = timezone.now()
-    user_mailings = Mailing.objects.filter(owner=request.user)
+    cache_key = f"home_statistics_{request.user.pk}"
+    context = cache.get(cache_key)
 
-    for mailing in user_mailings:
-        mailing.update_status()
+    if context is None:
+        current_time = timezone.now()
+        user_mailings = Mailing.objects.filter(owner=request.user)
 
-    user_attempts = MailingAttempt.objects.filter(
-        mailing__owner=request.user,
-    )
-    successful_attempts = user_attempts.filter(
-        status=MailingAttempt.STATUS_SUCCESS,
-    ).count()
-    failed_attempts = user_attempts.filter(
-        status=MailingAttempt.STATUS_FAILED,
-    ).count()
+        for mailing in user_mailings:
+            mailing.update_status()
 
-    context = {
-        "total_mailings": user_mailings.count(),
-        "active_mailings": user_mailings.filter(
-            start_time__lte=current_time,
-            end_time__gte=current_time,
-            status=Mailing.STATUS_STARTED,
-            is_active=True,
-        ).count(),
-        "unique_recipients": Recipient.objects.filter(owner=request.user).count(),
-        "successful_attempts": successful_attempts,
-        "failed_attempts": failed_attempts,
-        "sent_messages": successful_attempts,
-    }
+        user_attempts = MailingAttempt.objects.filter(
+            mailing__owner=request.user,
+        )
+        successful_attempts = user_attempts.filter(
+            status=MailingAttempt.STATUS_SUCCESS,
+        ).count()
+        failed_attempts = user_attempts.filter(
+            status=MailingAttempt.STATUS_FAILED,
+        ).count()
+
+        context = {
+            "total_mailings": user_mailings.count(),
+            "active_mailings": user_mailings.filter(
+                start_time__lte=current_time,
+                end_time__gte=current_time,
+                status=Mailing.STATUS_STARTED,
+                is_active=True,
+            ).count(),
+            "unique_recipients": Recipient.objects.filter(
+                owner=request.user,
+            ).count(),
+            "successful_attempts": successful_attempts,
+            "failed_attempts": failed_attempts,
+            "sent_messages": successful_attempts,
+        }
+        cache.set(cache_key, context, timeout=settings.CACHE_TTL)
+
     return render(request, "mailing/home.html", context)
 
 
@@ -87,9 +99,8 @@ class RecipientDetailView(LoginRequiredMixin, DetailView):
             return self.handle_no_permission()
 
         recipient = self.get_object()
-        if (
-            recipient.owner != request.user
-            and not request.user.has_perm("mailing.can_view_all_recipients")
+        if recipient.owner != request.user and not request.user.has_perm(
+            "mailing.can_view_all_recipients"
         ):
             raise PermissionDenied
 
@@ -205,9 +216,8 @@ class MailingDetailView(LoginRequiredMixin, DetailView):
             return self.handle_no_permission()
 
         mailing = super().get_object()
-        if (
-            mailing.owner != request.user
-            and not request.user.has_perm("mailing.can_view_all_mailings")
+        if mailing.owner != request.user and not request.user.has_perm(
+            "mailing.can_view_all_mailings"
         ):
             raise PermissionDenied
 

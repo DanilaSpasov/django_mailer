@@ -15,7 +15,6 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -90,6 +89,18 @@ DATABASES = {
         "PORT": os.getenv("DATABASE_PORT", "5432"),
     }
 }
+
+
+# Cache
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": os.getenv("REDIS_URL"),
+    }
+}
+
+CACHE_TTL = 60
 
 
 # Password validation
