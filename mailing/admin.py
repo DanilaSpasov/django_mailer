@@ -25,12 +25,13 @@ class MailingAdmin(admin.ModelAdmin):
         "start_time",
         "end_time",
         "status",
+        "is_active",
         "message",
         "owner",
     )
     list_display_links = ("id",)
     search_fields = ("message__subject", "owner__email")
-    list_filter = ("status", "start_time", "end_time")
+    list_filter = ("status", "is_active", "start_time", "end_time")
     filter_horizontal = ("recipients",)
 
 

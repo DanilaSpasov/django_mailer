@@ -22,11 +22,20 @@ class Recipient(models.Model):
         verbose_name = "Получатель"
         verbose_name_plural = "Получатели"
         ordering = ["full_name"]
+        permissions = [
+            ("can_view_all_recipients", "Может просматривать всех получателей"),
+        ]
 
 
 class Message(models.Model):
     subject = models.CharField(max_length=255, verbose_name="Тема письма")
     body = models.TextField(verbose_name="Текст письма")
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="messages",
+        verbose_name="Владелец",
+    )
 
     def __str__(self):
         return self.subject
@@ -56,6 +65,7 @@ class Mailing(models.Model):
         editable=False,
         verbose_name="Статус",
     )
+    is_active = models.BooleanField(default=True, verbose_name="Активна")
     message = models.ForeignKey(
         Message,
         on_delete=models.CASCADE,
@@ -108,6 +118,10 @@ class Mailing(models.Model):
     class Meta:
         verbose_name = "Рассылка"
         verbose_name_plural = "Рассылки"
+        permissions = [
+            ("can_view_all_mailings", "Может просматривать все рассылки"),
+            ("can_disable_mailing", "Может отключать рассылки"),
+        ]
 
 
 class MailingAttempt(models.Model):

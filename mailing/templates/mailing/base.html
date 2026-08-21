@@ -27,13 +27,33 @@
             <a class="nav-link" href="{% url 'mailing:mailing_list' %}">
                 Рассылки
             </a>
+            {% if perms.users.can_view_users %}
+                <a class="nav-link" href="{% url 'users:user_list' %}">
+                    Пользователи
+                </a>
+            {% endif %}
         </div>
 
-        {% if user.is_authenticated %}
-            <span class="navbar-text ms-auto">
-                {{ user.email }}
-            </span>
-        {% endif %}
+        <div class="d-flex align-items-center gap-3 ms-auto">
+            {% if user.is_authenticated %}
+                <span class="navbar-text">
+                    {{ user.email }}
+                </span>
+                <form method="post" action="{% url 'users:logout' %}">
+                    {% csrf_token %}
+                    <button class="btn btn-outline-secondary btn-sm" type="submit">
+                        Выйти
+                    </button>
+                </form>
+            {% else %}
+                <a class="btn btn-outline-primary btn-sm" href="{% url 'users:login' %}">
+                    Войти
+                </a>
+                <a class="btn btn-primary btn-sm" href="{% url 'users:register' %}">
+                    Регистрация
+                </a>
+            {% endif %}
+        </div>
     </div>
 </nav>
 

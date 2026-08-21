@@ -15,7 +15,6 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -92,6 +91,18 @@ DATABASES = {
 }
 
 
+# Cache
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": os.getenv("REDIS_URL"),
+    }
+}
+
+CACHE_TTL = 60
+
+
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
 
@@ -149,3 +160,7 @@ MAILERS = {
 AUTH_USER_MODEL = "users.User"
 
 DEFAULT_FROM_EMAIL = os.getenv("EMAIL_HOST_USER")
+
+LOGIN_URL = "users:login"
+LOGIN_REDIRECT_URL = "mailing:home"
+LOGOUT_REDIRECT_URL = "users:login"

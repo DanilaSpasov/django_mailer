@@ -35,5 +35,7 @@ class MailingForm(forms.ModelForm):
 
         if user:
             self.fields["recipients"].queryset = Recipient.objects.filter(owner=user)
+            self.fields["message"].queryset = Message.objects.filter(owner=user)
         else:
             self.fields["recipients"].queryset = Recipient.objects.none()
+            self.fields["message"].queryset = Message.objects.none()

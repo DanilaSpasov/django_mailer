@@ -18,6 +18,9 @@
                 <th scope="col">Ф. И. О.</th>
                 <th scope="col">Email</th>
                 <th scope="col">Комментарий</th>
+                {% if perms.mailing.can_view_all_recipients %}
+                    <th scope="col">Владелец</th>
+                {% endif %}
                 <th scope="col" class="text-end">Действия</th>
             </tr>
             </thead>
@@ -27,6 +30,9 @@
                     <td>{{ recipient.full_name }}</td>
                     <td>{{ recipient.email }}</td>
                     <td>{{ recipient.comment|default:"—" }}</td>
+                    {% if perms.mailing.can_view_all_recipients %}
+                        <td>{{ recipient.owner.email }}</td>
+                    {% endif %}
                     <td class="text-end text-nowrap">
                         <a
                             class="btn btn-sm btn-outline-primary"
@@ -34,18 +40,20 @@
                         >
                             Открыть
                         </a>
-                        <a
-                            class="btn btn-sm btn-outline-secondary"
-                            href="{% url 'mailing:recipient_update' recipient.pk %}"
-                        >
-                            Изменить
-                        </a>
-                        <a
-                            class="btn btn-sm btn-outline-danger"
-                            href="{% url 'mailing:recipient_delete' recipient.pk %}"
-                        >
-                            Удалить
-                        </a>
+                        {% if recipient.owner == user %}
+                            <a
+                                class="btn btn-sm btn-outline-secondary"
+                                href="{% url 'mailing:recipient_update' recipient.pk %}"
+                            >
+                                Изменить
+                            </a>
+                            <a
+                                class="btn btn-sm btn-outline-danger"
+                                href="{% url 'mailing:recipient_delete' recipient.pk %}"
+                            >
+                                Удалить
+                            </a>
+                        {% endif %}
                     </td>
                 </tr>
             {% endfor %}
