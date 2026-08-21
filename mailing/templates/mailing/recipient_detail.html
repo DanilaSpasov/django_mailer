@@ -1,0 +1,41 @@
+{% extends "mailing/base.html" %}
+
+{% block title %}{{ recipient.full_name }}{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h1 class="h4 mb-0">{{ recipient.full_name }}</h1>
+        <div class="d-flex gap-2">
+            <a
+                class="btn btn-sm btn-outline-secondary"
+                href="{% url 'mailing:recipient_update' recipient.pk %}"
+            >
+                Изменить
+            </a>
+            <a
+                class="btn btn-sm btn-outline-danger"
+                href="{% url 'mailing:recipient_delete' recipient.pk %}"
+            >
+                Удалить
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Email</dt>
+            <dd class="col-sm-9">{{ recipient.email }}</dd>
+
+            <dt class="col-sm-3">Комментарий</dt>
+            <dd class="col-sm-9">{{ recipient.comment|default:"—" }}</dd>
+        </dl>
+    </div>
+
+    <div class="card-footer">
+        <a class="btn btn-outline-primary" href="{% url 'mailing:recipient_list' %}">
+            К списку
+        </a>
+    </div>
+</div>
+{% endblock %}
