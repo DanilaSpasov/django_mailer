@@ -21,6 +21,9 @@
             <a class="nav-link" href="{% url 'mailing:recipient_list' %}">
                 Получатели
             </a>
+            <a class="nav-link" href="{% url 'mailing:message_list' %}">
+                Сообщения
+            </a>
         </div>
 
         {% if user.is_authenticated %}

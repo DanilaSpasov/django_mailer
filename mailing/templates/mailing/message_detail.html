@@ -1,0 +1,35 @@
+{% extends "mailing/base.html" %}
+
+{% block title %}{{ message.subject }}{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h1 class="h4 mb-0">{{ message.subject }}</h1>
+        <div class="d-flex gap-2">
+            <a
+                class="btn btn-sm btn-outline-secondary"
+                href="{% url 'mailing:message_update' message.pk %}"
+            >
+                Изменить
+            </a>
+            <a
+                class="btn btn-sm btn-outline-danger"
+                href="{% url 'mailing:message_delete' message.pk %}"
+            >
+                Удалить
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body">
+        {{ message.body|linebreaks }}
+    </div>
+
+    <div class="card-footer">
+        <a class="btn btn-outline-primary" href="{% url 'mailing:message_list' %}">
+            К списку
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -9,8 +9,8 @@ from django.views.generic import (
     UpdateView,
 )
 
-from mailing.forms import RecipientForm
-from mailing.models import Recipient
+from mailing.forms import MessageForm, RecipientForm
+from mailing.models import Message, Recipient
 
 
 class RecipientListView(LoginRequiredMixin, ListView):
@@ -83,3 +83,38 @@ class RecipientDeleteView(LoginRequiredMixin, DeleteView):
             raise PermissionDenied
 
         return super().dispatch(request, *args, **kwargs)
+
+
+class MessageListView(LoginRequiredMixin, ListView):
+    model = Message
+    template_name = "mailing/message_list.html"
+    context_object_name = "messages"
+
+
+class MessageCreateView(LoginRequiredMixin, CreateView):
+    model = Message
+    form_class = MessageForm
+    template_name = "mailing/message_form.html"
+    success_url = reverse_lazy("mailing:message_list")
+
+
+class MessageDetailView(LoginRequiredMixin, DetailView):
+    model = Message
+    template_name = "mailing/message_detail.html"
+    context_object_name = "message"
+
+
+class MessageUpdateView(LoginRequiredMixin, UpdateView):
+    model = Message
+    form_class = MessageForm
+    template_name = "mailing/message_form.html"
+
+    def get_success_url(self):
+        return reverse("mailing:message_detail", kwargs={"pk": self.object.pk})
+
+
+class MessageDeleteView(LoginRequiredMixin, DeleteView):
+    model = Message
+    template_name = "mailing/message_confirm_delete.html"
+    context_object_name = "message"
+    success_url = reverse_lazy("mailing:message_list")
