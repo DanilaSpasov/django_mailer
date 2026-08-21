@@ -1,6 +1,12 @@
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
+from django.views.decorators.http import require_POST
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -10,7 +16,7 @@ from django.views.generic import (
 )
 
 from mailing.forms import MailingForm, MessageForm, RecipientForm
-from mailing.models import Mailing, Message, Recipient
+from mailing.models import Mailing, MailingAttempt, Message, Recipient
 
 
 class RecipientListView(LoginRequiredMixin, ListView):
@@ -88,7 +94,7 @@ class RecipientDeleteView(LoginRequiredMixin, DeleteView):
 class MessageListView(LoginRequiredMixin, ListView):
     model = Message
     template_name = "mailing/message_list.html"
-    context_object_name = "messages"
+    context_object_name = "message_list"
 
 
 class MessageCreateView(LoginRequiredMixin, CreateView):
@@ -205,3 +211,70 @@ class MailingDeleteView(LoginRequiredMixin, DeleteView):
             raise PermissionDenied
 
         return super().dispatch(request, *args, **kwargs)
+
+
+@login_required
+@require_POST
+def send_mailing_view(request, pk):
+    mailing = get_object_or_404(
+        Mailing,
+        pk=pk,
+        owner=request.user,
+    )
+    current_time = timezone.now()
+
+    if not mailing.start_time <= current_time <= mailing.end_time:
+        messages.error(
+            request,
+            "Рассылку можно запустить только в установленный период.",
+        )
+        return redirect("mailing:mailing_detail", pk=mailing.pk)
+
+    successful_attempts = 0
+    failed_attempts = 0
+
+    for recipient in mailing.recipients.all():
+        try:
+            sent_count = send_mail(
+                subject=mailing.message.subject,
+                message=mailing.message.body,
+                from_email=None,
+                recipient_list=[recipient.email],
+            )
+
+            if sent_count:
+                MailingAttempt.objects.create(
+                    mailing=mailing,
+                    status=MailingAttempt.STATUS_SUCCESS,
+                    server_response=f"Письмо отправлено: {recipient.email}",
+                )
+                successful_attempts += 1
+            else:
+                MailingAttempt.objects.create(
+                    mailing=mailing,
+                    status=MailingAttempt.STATUS_FAILED,
+                    server_response=f"Письмо не отправлено: {recipient.email}",
+                )
+                failed_attempts += 1
+
+        except Exception as error:
+            MailingAttempt.objects.create(
+                mailing=mailing,
+                status=MailingAttempt.STATUS_FAILED,
+                server_response=f"{recipient.email}: {error}",
+            )
+            failed_attempts += 1
+
+    add_message = (
+        messages.warning
+        if failed_attempts or not successful_attempts
+        else messages.success
+    )
+    add_message(
+        request,
+        (
+            f"Рассылка завершена. Успешно: {successful_attempts}, "
+            f"неуспешно: {failed_attempts}."
+        ),
+    )
+    return redirect("mailing:mailing_detail", pk=mailing.pk)

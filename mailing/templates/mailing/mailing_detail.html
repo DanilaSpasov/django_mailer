@@ -7,6 +7,15 @@
     <div class="card-header d-flex justify-content-between align-items-center">
         <h1 class="h4 mb-0">Рассылка №{{ mailing.pk }}</h1>
         <div class="d-flex gap-2">
+            <form
+                method="post"
+                action="{% url 'mailing:mailing_send' mailing.pk %}"
+            >
+                {% csrf_token %}
+                <button class="btn btn-sm btn-success" type="submit">
+                    Запустить рассылку
+                </button>
+            </form>
             <a
                 class="btn btn-sm btn-outline-secondary"
                 href="{% url 'mailing:mailing_update' mailing.pk %}"
@@ -51,6 +60,32 @@
                 <li class="list-group-item">Получатели не выбраны.</li>
             {% endfor %}
         </ul>
+
+        <h2 class="h5 mt-4">История попыток</h2>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                <tr>
+                    <th scope="col">Дата и время</th>
+                    <th scope="col">Статус</th>
+                    <th scope="col">Ответ сервера</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for attempt in mailing.attempts.all %}
+                    <tr>
+                        <td>{{ attempt.attempt_time|date:"d.m.Y H:i:s" }}</td>
+                        <td>{{ attempt.status }}</td>
+                        <td>{{ attempt.server_response }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3">Попыток отправки пока нет.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div class="card-footer">

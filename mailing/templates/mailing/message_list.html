@@ -10,7 +10,7 @@
     </a>
 </div>
 
-{% if messages %}
+{% if message_list %}
     <div class="table-responsive">
         <table class="table table-striped align-middle">
             <thead>
@@ -21,7 +21,7 @@
             </tr>
             </thead>
             <tbody>
-            {% for message in messages %}
+            {% for message in message_list %}
                 <tr>
                     <td>{{ message.subject }}</td>
                     <td>{{ message.body|truncatechars:80 }}</td>

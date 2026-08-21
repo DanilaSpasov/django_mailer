@@ -134,8 +134,18 @@ STATIC_URL = "static/"
 
 MAILERS = {
     "default": {
-        "BACKEND": "django.core.mail.backends.console.EmailBackend",
+        "BACKEND": os.getenv("EMAIL_BACKEND"),
+        "OPTIONS": {
+            "host": os.getenv("EMAIL_HOST"),
+            "port": int(os.getenv("EMAIL_PORT", "465")),
+            "username": os.getenv("EMAIL_HOST_USER"),
+            "password": os.getenv("EMAIL_HOST_PASSWORD"),
+            "use_tls": os.getenv("EMAIL_USE_TLS", "False").lower() == "true",
+            "use_ssl": os.getenv("EMAIL_USE_SSL", "True").lower() == "true",
+        },
     },
 }
 
 AUTH_USER_MODEL = "users.User"
+
+DEFAULT_FROM_EMAIL = os.getenv("EMAIL_HOST_USER")

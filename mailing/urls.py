@@ -16,6 +16,7 @@ from mailing.views import (
     RecipientDetailView,
     RecipientListView,
     RecipientUpdateView,
+    send_mailing_view,
 )
 
 
@@ -62,6 +63,7 @@ urlpatterns = [
     ),
     path("mailings/", MailingListView.as_view(), name="mailing_list"),
     path("mailings/create/", MailingCreateView.as_view(), name="mailing_create"),
+    path("mailings/<int:pk>/send/", send_mailing_view, name="mailing_send"),
     path(
         "mailings/<int:pk>/",
         MailingDetailView.as_view(),
