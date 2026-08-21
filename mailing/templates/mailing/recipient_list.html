@@ -1,0 +1,60 @@
+{% extends "mailing/base.html" %}
+
+{% block title %}Получатели{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Получатели</h1>
+    <a class="btn btn-primary" href="{% url 'mailing:recipient_create' %}">
+        Добавить получателя
+    </a>
+</div>
+
+{% if recipients %}
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+            <tr>
+                <th scope="col">Ф. И. О.</th>
+                <th scope="col">Email</th>
+                <th scope="col">Комментарий</th>
+                <th scope="col" class="text-end">Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for recipient in recipients %}
+                <tr>
+                    <td>{{ recipient.full_name }}</td>
+                    <td>{{ recipient.email }}</td>
+                    <td>{{ recipient.comment|default:"—" }}</td>
+                    <td class="text-end text-nowrap">
+                        <a
+                            class="btn btn-sm btn-outline-primary"
+                            href="{% url 'mailing:recipient_detail' recipient.pk %}"
+                        >
+                            Открыть
+                        </a>
+                        <a
+                            class="btn btn-sm btn-outline-secondary"
+                            href="{% url 'mailing:recipient_update' recipient.pk %}"
+                        >
+                            Изменить
+                        </a>
+                        <a
+                            class="btn btn-sm btn-outline-danger"
+                            href="{% url 'mailing:recipient_delete' recipient.pk %}"
+                        >
+                            Удалить
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-info" role="alert">
+        У вас пока нет получателей.
+    </div>
+{% endif %}
+{% endblock %}

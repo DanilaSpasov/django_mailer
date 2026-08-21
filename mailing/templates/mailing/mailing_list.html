@@ -1,0 +1,62 @@
+{% extends "mailing/base.html" %}
+
+{% block title %}Рассылки{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Рассылки</h1>
+    <a class="btn btn-primary" href="{% url 'mailing:mailing_create' %}">
+        Создать рассылку
+    </a>
+</div>
+
+{% if mailings %}
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+            <tr>
+                <th scope="col">Сообщение</th>
+                <th scope="col">Начало</th>
+                <th scope="col">Окончание</th>
+                <th scope="col">Статус</th>
+                <th scope="col" class="text-end">Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for mailing in mailings %}
+                <tr>
+                    <td>{{ mailing.message.subject }}</td>
+                    <td>{{ mailing.start_time|date:"d.m.Y H:i" }}</td>
+                    <td>{{ mailing.end_time|date:"d.m.Y H:i" }}</td>
+                    <td>{{ mailing.status }}</td>
+                    <td class="text-end text-nowrap">
+                        <a
+                            class="btn btn-sm btn-outline-primary"
+                            href="{% url 'mailing:mailing_detail' mailing.pk %}"
+                        >
+                            Открыть
+                        </a>
+                        <a
+                            class="btn btn-sm btn-outline-secondary"
+                            href="{% url 'mailing:mailing_update' mailing.pk %}"
+                        >
+                            Изменить
+                        </a>
+                        <a
+                            class="btn btn-sm btn-outline-danger"
+                            href="{% url 'mailing:mailing_delete' mailing.pk %}"
+                        >
+                            Удалить
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-info" role="alert">
+        У вас пока нет рассылок.
+    </div>
+{% endif %}
+{% endblock %}

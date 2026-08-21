@@ -1,0 +1,97 @@
+{% extends "mailing/base.html" %}
+
+{% block title %}Рассылка №{{ mailing.pk }}{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h1 class="h4 mb-0">Рассылка №{{ mailing.pk }}</h1>
+        <div class="d-flex gap-2">
+            <form
+                method="post"
+                action="{% url 'mailing:mailing_send' mailing.pk %}"
+            >
+                {% csrf_token %}
+                <button class="btn btn-sm btn-success" type="submit">
+                    Запустить рассылку
+                </button>
+            </form>
+            <a
+                class="btn btn-sm btn-outline-secondary"
+                href="{% url 'mailing:mailing_update' mailing.pk %}"
+            >
+                Изменить
+            </a>
+            <a
+                class="btn btn-sm btn-outline-danger"
+                href="{% url 'mailing:mailing_delete' mailing.pk %}"
+            >
+                Удалить
+            </a>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Статус</dt>
+            <dd class="col-sm-9">{{ mailing.status }}</dd>
+
+            <dt class="col-sm-3">Начало</dt>
+            <dd class="col-sm-9">{{ mailing.start_time|date:"d.m.Y H:i" }}</dd>
+
+            <dt class="col-sm-3">Окончание</dt>
+            <dd class="col-sm-9">{{ mailing.end_time|date:"d.m.Y H:i" }}</dd>
+
+            <dt class="col-sm-3">Тема сообщения</dt>
+            <dd class="col-sm-9">{{ mailing.message.subject }}</dd>
+
+            <dt class="col-sm-3">Текст сообщения</dt>
+            <dd class="col-sm-9">{{ mailing.message.body|linebreaks }}</dd>
+        </dl>
+
+        <h2 class="h5 mt-4">Получатели</h2>
+        <ul class="list-group">
+            {% for recipient in mailing.recipients.all %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>{{ recipient.full_name }}</span>
+                    <span>{{ recipient.email }}</span>
+                </li>
+            {% empty %}
+                <li class="list-group-item">Получатели не выбраны.</li>
+            {% endfor %}
+        </ul>
+
+        <h2 class="h5 mt-4">История попыток</h2>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                <tr>
+                    <th scope="col">Дата и время</th>
+                    <th scope="col">Статус</th>
+                    <th scope="col">Ответ сервера</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for attempt in mailing.attempts.all %}
+                    <tr>
+                        <td>{{ attempt.attempt_time|date:"d.m.Y H:i:s" }}</td>
+                        <td>{{ attempt.status }}</td>
+                        <td>{{ attempt.server_response }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3">Попыток отправки пока нет.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card-footer">
+        <a class="btn btn-outline-primary" href="{% url 'mailing:mailing_list' %}">
+            К списку
+        </a>
+    </div>
+</div>
+{% endblock %}

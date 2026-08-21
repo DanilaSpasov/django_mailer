@@ -1,0 +1,65 @@
+{% extends "mailing/base.html" %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Статистика рассылок</h1>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <h2 class="display-5">{{ total_mailings }}</h2>
+                <p class="card-text">Всего рассылок</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <h2 class="display-5">{{ active_mailings }}</h2>
+                <p class="card-text">Активных рассылок</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body text-center">
+                <h2 class="display-5">{{ unique_recipients }}</h2>
+                <p class="card-text">Уникальных получателей</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <div class="col-md-4">
+        <div class="card h-100 border-success shadow-sm">
+            <div class="card-body text-center">
+                <h2 class="display-5 text-success">{{ successful_attempts }}</h2>
+                <p class="card-text">Успешных попыток</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 border-danger shadow-sm">
+            <div class="card-body text-center">
+                <h2 class="display-5 text-danger">{{ failed_attempts }}</h2>
+                <p class="card-text">Неуспешных попыток</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 border-primary shadow-sm">
+            <div class="card-body text-center">
+                <h2 class="display-5 text-primary">{{ sent_messages }}</h2>
+                <p class="card-text">Отправлено писем</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
