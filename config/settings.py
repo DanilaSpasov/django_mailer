@@ -149,3 +149,7 @@ MAILERS = {
 AUTH_USER_MODEL = "users.User"
 
 DEFAULT_FROM_EMAIL = os.getenv("EMAIL_HOST_USER")
+
+LOGIN_URL = "users:login"
+LOGIN_REDIRECT_URL = "mailing:home"
+LOGOUT_REDIRECT_URL = "users:login"
