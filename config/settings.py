@@ -15,7 +15,6 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -43,6 +42,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "mailing",
+    "users",
 ]
 
 MIDDLEWARE = [
@@ -80,10 +81,26 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("DATABASE_NAME"),
+        "USER": os.getenv("DATABASE_USER"),
+        "PASSWORD": os.getenv("DATABASE_PASSWORD"),
+        "HOST": os.getenv("DATABASE_HOST"),
+        "PORT": os.getenv("DATABASE_PORT", "5432"),
     }
 }
+
+
+# Cache
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": os.getenv("REDIS_URL"),
+    }
+}
+
+CACHE_TTL = 60
 
 
 # Password validation
@@ -108,9 +125,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/6.1/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "ru-ru"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/Moscow"
 
 USE_I18N = True
 
@@ -128,6 +145,22 @@ STATIC_URL = "static/"
 
 MAILERS = {
     "default": {
-        "BACKEND": "django.core.mail.backends.console.EmailBackend",
+        "BACKEND": os.getenv("EMAIL_BACKEND"),
+        "OPTIONS": {
+            "host": os.getenv("EMAIL_HOST"),
+            "port": int(os.getenv("EMAIL_PORT", "465")),
+            "username": os.getenv("EMAIL_HOST_USER"),
+            "password": os.getenv("EMAIL_HOST_PASSWORD"),
+            "use_tls": os.getenv("EMAIL_USE_TLS", "False").lower() == "true",
+            "use_ssl": os.getenv("EMAIL_USE_SSL", "True").lower() == "true",
+        },
     },
 }
+
+AUTH_USER_MODEL = "users.User"
+
+DEFAULT_FROM_EMAIL = os.getenv("EMAIL_HOST_USER")
+
+LOGIN_URL = "users:login"
+LOGIN_REDIRECT_URL = "mailing:home"
+LOGOUT_REDIRECT_URL = "users:login"
